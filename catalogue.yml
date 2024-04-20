@@ -1,0 +1,69 @@
+- name : Catologue playbook
+  hosts: 
+  become: yes
+  tasks:
+   - name: Disable old node js and enable new node js module
+     ansible.builtin.shell:
+       dnf nodule disable nodejs -y ; dnf module enable nodejs:18 -y
+
+   - name: Install nodejs
+     ansible.builtin.dnf:
+       name: nodejs
+       state: present
+
+   - name: Create roboshop user
+     ansible.builtin.user:
+       name: roboshop
+
+   - name: Remove app direcotry
+     ansible.builtin.file:
+       path: /app
+       state: absent
+
+   - name: Create app directory
+     ansible.builtin.file:
+       name: /app
+       state: directory
+
+   - name: Downalod the application
+     ansible.builtin.get_url:
+       url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
+       dest: /tmp/catalogue.zip
+
+  - name: Extract the application
+    ansible.builtin.unarchive:
+       src: /tmp/catalogue.zip
+       dest: /app
+       remote_src: yes
+
+  - name: Install dependencies
+    ansible.builtin.command: npm install
+       args: 
+         chdir: /app
+
+  - name: Copy catalogue service
+    ansible.builtin.copy:
+      src: catalogue.service
+      dest: /etc/systemd/system/catalogue.service
+
+  - name: Daemon Reload and start service
+    ansible.builtin.systemd_service:
+       daemon_reload: true
+
+  - name: Add Mongodb repo to yum repositories
+    ansible.builtin.copy:
+       src: mongodb.repo
+       dest: /etc/yum.repos.d/mongodb.repo
+  
+  - name: Install Mongodb client
+    ansible.builtin.dnf:
+      name: mongodb-org-shell
+      state: present
+
+  - name: 
+    
+        
+
+       
+       
+ 
