@@ -1,0 +1,27 @@
+- name: Mysql Playbook
+  hosts: mysql
+  become: yes
+  tasks:
+    - name: Disable default sql module
+      ansible.builtin.shell: dnf module disable mysql -y
+
+    - name: Setup sql 5.7 repo
+      ansible.builtin.copy:
+        src: mysql.repo
+        dest: /etc/yum.repos.d/mysql.repo
+
+    - name: install mysql
+      ansible.builtin.dnf:
+        name: mysqlmysql-community-server
+        state: present
+
+    - name: Start and enable mysql
+      ansible.builtin.service:
+        name: mysqld
+        state: started
+        enabled: yes
+
+    - name: Mysql secure installation
+      ansible.builtin.command: mysql_secure_installation --set-root-pass RoboShop@1
+
+    

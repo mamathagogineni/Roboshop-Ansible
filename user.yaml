@@ -1,0 +1,57 @@
+- name: User Play
+  hosts: user
+  become: yes
+  tasks:
+    - name: Disbale old js and enbale new js
+      ansible.builtin.shell: dnf module disable nodejs -y ; dnf module enable nodejs:18 -y
+
+    - name: Install nodejs
+      ansible.builtin.dnf:
+        name: nodejs
+        state: present
+
+    - name: Add application user
+      ansible.builtin.user:
+        name: roboshop
+
+    - name: Remove app directory
+      ansible.builtin.file:
+        path: /app
+        state: absent
+        recurse: yes
+      
+    - name: Create app directory
+      ansible.builtin.file:
+        path: /app
+        state: directory
+
+    - name: Dowmload the code
+      ansible.builtin.get_url:
+        url: https://roboshop-builds.s3.amazonaws.com/user.zip
+        dest: /tmp
+
+    - name: Extarct the application
+      ansible.builtin.unarchive:
+        src: /tmp/user.zip
+        dest: /app
+        remote_src: yes
+
+    - name: Install npm dependencies
+      ansible.builtin.command: npm install
+      args:
+        chdir: /app
+
+    - name: Configure user service
+      ansible.builtin.copy:
+        src: user.service
+        dest: /etc/systemd/system/user.service
+
+    - name: Daemon load the service
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+    
+    - name: Start and Enable user service
+      ansible.builtin.service:
+        name: user
+        state: restarted
+        enabled: true
