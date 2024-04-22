@@ -1,5 +1,5 @@
-- name: User Play
-  hosts: user
+- name: Cart Play
+  hosts: cart
   become: yes
   tasks:
     - name: Disbale old js and enbale new js
@@ -27,7 +27,7 @@
 
     - name: Dowmload the code
       ansible.builtin.get_url:
-        url: https://roboshop-builds.s3.amazonaws.com/user.zip
+        url: https://roboshop-builds.s3.amazonaws.com/cart.zip
         dest: /tmp
 
     - name: Extarct the application
@@ -41,41 +41,17 @@
       args:
         chdir: /app
 
-    - name: Configure user service
+    - name: Configure cart service
       ansible.builtin.copy:
-        src: user.service
-        dest: /etc/systemd/system/user.service
+        src: cart.service
+        dest: /etc/systemd/system/cart.service
 
     - name: Daemon load the service
       ansible.builtin.systemd_service:
         daemon_reload: true
     
-      # let's start after the data is loaded
-
-    - name: Copy mongodb repo
-      ansible.builtin.copy:
-        src: mongodb.repo
-        dest: /etc/yum.repos.d/mongodb.repo
-
-    - name: Install mongodb client
-      ansible.builtin.package:
-        name: mongodb-org-shell
-        state: present
-
-    - name: get the users count
-      ansible.builtin.command:  mongo --host mongodb.daws76s.online --quiet --eval 'db = db.getSiblingDB("users"); db.users.count()'
-      register: user_count
-
-  # - name: print the count
-  #   ansible.builtin.debug:
-  #     msg: "product count: {{user_count}}"
-
-    - name: load user data
-      ansible.builtin.command: mongo --host mongodb.daws76s.online < /app/schema/user.js
-      when: user_count.stdout == "0" # keep double quotes
-
     - name: Start and Enable user service
       ansible.builtin.service:
-        name: user
+        name: cart
         state: restarted
         enabled: true
