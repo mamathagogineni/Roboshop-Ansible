@@ -29,49 +29,49 @@
        url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
        dest: /tmp/catalogue.zip
 
-  - name: Extract the application
-    ansible.builtin.unarchive:
+   - name: Extract the application
+     ansible.builtin.unarchive:
        src: /tmp/catalogue.zip
        dest: /app
        remote_src: yes
 
-  - name: Install dependencies
-    ansible.builtin.command: npm install
-       args: 
-         chdir: /app
+   - name: Install dependencies
+     ansible.builtin.command: npm install
+     args: 
+       chdir: /app
 
-  - name: Copy catalogue service
-    ansible.builtin.copy:
-      src: catalogue.service
-      dest: /etc/systemd/system/catalogue.service
+   - name: Copy catalogue service
+     ansible.builtin.copy:
+       src: catalogue.service
+       dest: /etc/systemd/system/catalogue.service
 
-  - name: Daemon Reload and start service
-    ansible.builtin.systemd_service:
+   - name: Daemon Reload and start service
+     ansible.builtin.systemd_service:
        daemon_reload: true
 
-  - name: Add Mongodb repo to yum repositories
-    ansible.builtin.copy:
+   - name: Add Mongodb repo to yum repositories
+     ansible.builtin.copy:
        src: mongodb.repo
        dest: /etc/yum.repos.d/mongodb.repo
   
-  - name: Install Mongodb client
-    ansible.builtin.dnf:
-      name: mongodb-org-shell
-      state: present
+   - name: Install Mongodb client
+     ansible.builtin.dnf:
+       name: mongodb-org-shell
+       state: present
 
-  - name: get the categories count
-    ansible.builtin.command:  mongo --host 54.235.2.147 --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
-    register: product_count
+   - name: get the categories count
+     ansible.builtin.command: mongo --host 54.235.2.147 --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
+     register: product_count
     
-  - name: load catalogue data
-    ansible.builtin.command: mongo --host 54.235.2.147 < /app/schema/catalogue.js
-    when: product_count.stdout == "0" # keep double quotes
+   - name: load catalogue data
+     ansible.builtin.command: mongo --host 54.235.2.147 < /app/schema/catalogue.js
+     when: product_count.stdout == "0" # keep double quotes
 
-  - name: Start Catalogue service
-    ansible.builtin.service:
-      name: catalogue
-      state: started
-      enabled: yes
+   - name: Start Catalogue service
+     ansible.builtin.service:
+       name: catalogue
+       state: started
+       enabled: yes
         
 
        
